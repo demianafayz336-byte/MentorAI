@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Hugging Face Spaces required port
-EXPOSE 7860
+EXPOSE 3000
 
 # Run FastAPI application
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "3000"]
