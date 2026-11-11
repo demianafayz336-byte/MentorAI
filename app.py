@@ -14,13 +14,8 @@ import torch
 
 app = FastAPI(title="MentorAI")
 
-print("Loading Embeddings and LLM...")
+print("Loading Embeddings...")
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-model_id = "Qwen/Qwen2.5-1.5B-Instruct"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto")
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=200)
-llm = HuggingFacePipeline(pipeline=pipe)
 
 if os.path.exists("course_materials"):
     loader = DirectoryLoader("course_materials", glob="*.txt", loader_cls=TextLoader)
@@ -35,6 +30,19 @@ if documents:
     vectorstore = FAISS.from_documents(chunks, embeddings)
 else:
     vectorstore = None
+
+llm = None
+
+def load_llm():
+    global llm
+    if llm is None:
+        print("Loading LLM Model (this may take a while)...")
+        model_id = "Qwen/Qwen2.5-0.5B-Instruct"
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto")
+        pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=200)
+        llm = HuggingFacePipeline(pipeline=pipe)
+    return llm
 
 class QueryRequest(BaseModel):
     question: str
@@ -71,6 +79,8 @@ async def upload_file(file: UploadFile = File(...)):
 def ask(request: QueryRequest):
     if vectorstore is None:
         return {"answer": "No documents uploaded yet.", "sources": []}
+    
+    current_llm = load_llm()
         
     docs = vectorstore.similarity_search(request.question, k=2)
     context = "\n\n".join([doc.page_content for doc in docs])
@@ -85,7 +95,7 @@ Context:
 Question: {request.question}
 Helpful Answer:"""
     
-    response = llm.invoke(prompt)
+    response = current_llm.invoke(prompt)
     if "Helpful Answer:" in response:
         response = response.split("Helpful Answer:")[-1].strip()
     
