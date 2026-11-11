@@ -5,14 +5,14 @@ from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 import os
 import shutil
-from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredExcelLoader
+from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredExcelLoader, DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings, HuggingFacePipeline
 from langchain_community.vectorstores import FAISS
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 
-app = FastAPI(title="RAG Chat App")
+app = FastAPI(title="MentorAI")
 
 print("Loading Embeddings and LLM...")
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -48,7 +48,6 @@ async def upload_file(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # اختيار الـ Loader حسب نوع الملف
     if file.filename.endswith(".txt"):
         loader = TextLoader(file_path)
     elif file.filename.endswith(".pdf"):
@@ -97,7 +96,7 @@ html_content = """
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Course Assistant</title>
+    <title>MentorAI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -122,7 +121,7 @@ html_content = """
 <body>
     <div class="chat-container">
         <div class="header">
-            <h1>🎓 Smart Course Assistant</h1>
+            <h1>🧠 MentorAI</h1>
             <label class="upload-btn">
                 📂 Upload File
                 <input type="file" id="fileInput" accept=".txt, .pdf, .xlsx, .xls" onchange="uploadFile()">
@@ -208,6 +207,6 @@ def home():
 config = uvicorn.Config(app, host="0.0.0.0", port=8000)
 server = uvicorn.Server(config)
 
-print("✅ RAG Chat App is running on port 8000!")
+print("✅ MentorAI is running on port 8000!")
 loop = asyncio.get_event_loop()
 loop.create_task(server.serve())
