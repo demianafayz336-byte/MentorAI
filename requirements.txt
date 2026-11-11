@@ -6,12 +6,14 @@ langchain
 langchain-community
 langchain-huggingface
 langchain-text-splitters
+langchain-core
 faiss-cpu
 transformers
 torch
 sentence-transformers
 accelerate
 pypdf
+python-docx
+python-pptx
 openpyxl
 xlrd
-unstructured[xlsx]
