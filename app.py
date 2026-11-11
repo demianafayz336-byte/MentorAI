@@ -214,9 +214,10 @@ html_content = """
 def home():
     return html_content
 
-config = uvicorn.Config(app, host="0.0.0.0", port=8000)
+port = int(os.environ.get("PORT", 3000))
+config = uvicorn.Config(app, host="0.0.0.0", port=port)
 server = uvicorn.Server(config)
 
-print("✅ MentorAI is running on port 8000!")
+print(f"✅ MentorAI is running on port {port}!")
 loop = asyncio.get_event_loop()
 loop.create_task(server.serve())
